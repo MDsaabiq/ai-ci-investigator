@@ -92,4 +92,21 @@ class GitHubClient:
                         errors="replace",
                     )
 
-        return logs
+        return logs
+    def search_repository(
+        self,
+        repository: str,
+        query: str,
+    ) -> list[dict]:
+        results = self.github.search_code(
+            f"{query} repo:{repository}"
+        )
+
+        return [
+            {
+                "path": result.path,
+                "name": result.name,
+                "url": result.html_url,
+            }
+            for result in results
+        ]
