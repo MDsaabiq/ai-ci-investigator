@@ -6,4 +6,5 @@ langchain-core
 pydantic
 python-dotenv
 PyGithub
-dotenv
+langchain-mistralai
+langchain-groq
