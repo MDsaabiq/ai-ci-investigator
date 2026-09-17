@@ -44,7 +44,20 @@ https://github.com/user-attachments/assets/a24224ce-6165-48ed-bd9c-b284289f36e4
 
 ## 🏗️ System Architecture
 
-![Architecture Diagram](reports/figures/architecture.png)
+<p align="center">
+  <img src="reports/figures/architecture.png" alt="System Architecture Diagram" width="100%" />
+</p>
+
+> **End-to-End Workflow Breakdown**:
+> 1. **Telemetry & Log Ingestion**: Extracts failed workflow run metadata and isolates error stack traces.
+> 2. **Stateful LangGraph Orchestration**: Drives autonomous repository tool inspection (file reading, symbol searching) across multiple turns.
+> 3. **Azure AI Search Vector RAG**: Cosine-similarity retrieval against historical postmortems (`ci-incidents`) for proven fixes.
+> 4. **Code Patch Synthesis**: Generates targeted, compile-ready file modifications.
+> 5. **Human-in-the-Loop Gate**: Checkpoints execution state and renders a side-by-side diff for engineer verification.
+> 6. **Automated GitHub PR**: Commits atomic file blobs to a dedicated fix branch and opens a documented Pull Request.
+
+<details>
+<summary><b>📊 Click to expand Interactive State Flowchart (Mermaid)</b></summary>
 
 ```mermaid
 flowchart TD
@@ -84,6 +97,8 @@ flowchart TD
     style KnowledgeRetrieval fill:#022c22,stroke:#10b981,stroke-width:2px;
     style Remediation fill:#1e1b4b,stroke:#6366f1,stroke-width:2px;
 ```
+
+</details>
 
 ---
 
