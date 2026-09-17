@@ -7,4 +7,4 @@ pydantic
 python-dotenv
 PyGithub
 langchain-mistralai
-langchain-groq
+langchain-groq
