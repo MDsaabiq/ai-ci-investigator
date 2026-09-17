@@ -9,6 +9,10 @@
 
 > **An enterprise-grade, stateful AI agent that diagnoses failing GitHub Actions workflows in real time, cross-references historical postmortems via Azure AI Search RAG, synthesizes surgical code patches, and opens verified Pull Requests under strict Human-in-the-Loop (HITL) safety controls.**
 
+<p align="center">
+  <a href="#live-demo"><b>▶️ Click here to watch the Live Demo Video 🎬</b></a>
+</p>
+
 ---
 
 ## 📌 Executive Summary & Motivation
@@ -29,6 +33,7 @@ I engineered this **Autonomous AI CI/CD Investigator** to bridge that gap. It ac
 
 ---
 
+<a id="live-demo"></a>
 ## 🎬 Live Demo
 
 https://github.com/user-attachments/assets/a24224ce-6165-48ed-bd9c-b284289f36e4
