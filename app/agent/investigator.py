@@ -35,27 +35,36 @@ class Investigator:
     def investigate(
         self,
         evidence: InitialEvidence,
+        additional_evidence: dict[str, str] | None = None,
     ) -> InvestigationResult:
+
+        additional_text = ""
+        if additional_evidence:
+            additional_text = "\n\nAdditional files/evidence gathered so far:\n"
+            for name, content in additional_evidence.items():
+                additional_text += f"\n--- File: {name} ---\n{content}\n"
+
+        prompt_text = f"""
+Here is the CI/CD evidence:
+
+{evidence.model_dump_json(indent=2)}
+{additional_text}
+
+Analyze the evidence and return:
+- the most likely hypothesis
+- evidence supporting it
+- repository files you still need to inspect (leave empty [] if you have enough evidence)
+- search_queries to search codebase if exact file paths are unknown (leave empty [] if none)
+- additional information you need (leave empty [] if none)
+
+Do not generate a fix 
+
+"""
 
         response = self.structured_llm.invoke(
             [
                 ("system", INVESTIGATOR_SYSTEM_PROMPT),
-                (
-                    "human",
-                    f"""
-Here is the initial CI/CD evidence:
-
-{evidence.model_dump_json(indent=2)}
-
-Analyze it and return:
-- the most likely hypothesis
-- evidence supporting it
-- repository files you need to inspect
-- additional information you need
-
-Do not generate a fix yet.
-""",
-                ),
+                ("human", prompt_text),
             ]
         )
 

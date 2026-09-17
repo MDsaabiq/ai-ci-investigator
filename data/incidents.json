@@ -1,0 +1,27 @@
+[
+  {
+    "incident_id": "INC-1",
+    "issue": "GitHub Actions failed: ModuleNotFoundError: No module named 'app'.",
+    "fix": "Added app/__init__.py and changed the CI command to python -m pytest app/tests."
+  },
+  {
+    "incident_id": "INC-2",
+    "issue": "Docker build failure: Dockerfile used nonexistent base image tag python:3.12-slim-bogus.",
+    "fix": "Restored FROM python:3.12-slim."
+  },
+  {
+    "incident_id": "INC-3",
+    "issue": "pip install failed: httpx==999.0.0 does not exist.",
+    "fix": "Restored httpx==0.27.2 in requirements.txt."
+  },
+  {
+    "incident_id": "INC-4",
+    "issue": "Test assertion failure: test_root expected 'Wrong App Name' but got 'AI CI/CD Failure Investigator'.",
+    "fix": "Corrected test to expect 'AI CI/CD Failure Investigator'."
+  },
+  {
+    "incident_id": "INC-5",
+    "issue": "Nginx upstream failure: upstream server 'wrong-server:8000' does not exist.",
+    "fix": "Restored upstream server to 'app:8000' in nginx.conf."
+  }
+]

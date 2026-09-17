@@ -8,3 +8,8 @@ python-dotenv
 PyGithub
 langchain-mistralai
 langchain-groq
+langgraph
+langchain-text-splitters
+langchain-openai
+azure-search-documents
+azure-identity

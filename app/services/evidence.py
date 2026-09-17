@@ -49,11 +49,29 @@ class EvidenceCollector:
                 )
             )
 
-        # Combine log files
-        combined_logs = "\n\n".join(
-            f"--- {filename} ---\n{content}"
-            for filename, content in logs.items()
-        )
+        # Combine and extract only relevant failure logs to stay well within token limits
+        relevant_sections = []
+        for filename, content in logs.items():
+            # Skip noise/setup files
+            if filename.startswith("0_") or "system" in filename.lower() or "Post " in filename or "Set up" in filename:
+                continue
+
+            lines = content.strip().splitlines()
+            is_failing = bool(failed_step and failed_step.lower() in filename.lower())
+            has_error = any(kw in content.lower() for kw in ["error", "fail", "fatal", "traceback", "exception"])
+
+            if is_failing or has_error:
+                tail_lines = lines[-60:] if len(lines) > 60 else lines
+                relevant_sections.append(f"--- {filename} ---\n" + "\n".join(tail_lines))
+
+        if not relevant_sections:
+            for filename, content in list(logs.items())[:3]:
+                lines = content.strip().splitlines()
+                relevant_sections.append(f"--- {filename} ---\n" + "\n".join(lines[-30:]))
+
+        combined_logs = "\n\n".join(relevant_sections)
+        if len(combined_logs) > 4000:
+            combined_logs = combined_logs[-4000:]
 
         return InitialEvidence(
             repository=repository,
@@ -68,4 +86,4 @@ class EvidenceCollector:
                 else None
             ),
             changed_files=changed_files,
-        )
+        )

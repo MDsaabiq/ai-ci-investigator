@@ -1,9 +1,11 @@
 import io
 import zipfile
+from typing import Any
 import requests
 from github import Github
 from github.Repository import Repository
 from github.WorkflowRun import WorkflowRun
+
 
 class GitHubClient:
     def __init__(self, token: str):
@@ -110,3 +112,123 @@ class GitHubClient:
             }
             for result in results
         ]
+
+    def create_branch(
+        self,
+        repository: str,
+        branch_name: str,
+        base_sha: str,
+    ) -> str:
+        repo = self.get_repository(repository)
+        ref_path = f"refs/heads/{branch_name}"
+
+        try:
+            repo.get_git_ref(f"heads/{branch_name}")
+            # Branch already exists, update ref to base_sha
+            ref = repo.get_git_ref(f"heads/{branch_name}")
+            ref.edit(sha=base_sha, force=True)
+        except Exception:
+            # Create new branch ref
+            repo.create_git_ref(ref=ref_path, sha=base_sha)
+
+        return branch_name
+
+    def apply_file_changes(
+        self,
+        repository: str,
+        branch_name: str,
+        changes: list[Any],
+        commit_message: str = "AI automated CI fix",
+    ) -> list[str]:
+        repo = self.get_repository(repository)
+        applied = []
+
+        for change in changes:
+            # Support both Pydantic FileChange and dict
+            path = change.path if hasattr(change, "path") else change.get("path")
+            action = change.action if hasattr(change, "action") else change.get("action", "create")
+            content = change.content if hasattr(change, "content") else change.get("content", "")
+
+            if not path:
+                continue
+
+            clean_path = path.strip().lstrip("/")
+
+            try:
+                if action == "create":
+                    try:
+                        # Check if it already exists on branch
+                        existing = repo.get_contents(clean_path, ref=branch_name)
+                        repo.update_file(
+                            clean_path,
+                            f"{commit_message}: update {clean_path}",
+                            content,
+                            sha=existing.sha,
+                            branch=branch_name,
+                        )
+                    except Exception:
+                        repo.create_file(
+                            clean_path,
+                            f"{commit_message}: create {clean_path}",
+                            content,
+                            branch=branch_name,
+                        )
+                elif action == "modify":
+                    existing = repo.get_contents(clean_path, ref=branch_name)
+                    repo.update_file(
+                        clean_path,
+                        f"{commit_message}: modify {clean_path}",
+                        content,
+                        sha=existing.sha,
+                        branch=branch_name,
+                    )
+                elif action == "delete":
+                    existing = repo.get_contents(clean_path, ref=branch_name)
+                    repo.delete_file(
+                        clean_path,
+                        f"{commit_message}: delete {clean_path}",
+                        sha=existing.sha,
+                        branch=branch_name,
+                    )
+                applied.append(clean_path)
+            except Exception as e:
+                print(f"Error applying change to {clean_path}: {e}")
+
+        return applied
+
+    def create_pull_request(
+        self,
+        repository: str,
+        title: str,
+        body: str,
+        head_branch: str,
+        base_branch: str = "main",
+    ) -> dict[str, Any]:
+        repo = self.get_repository(repository)
+
+        # Check if an open PR already exists for this branch
+        open_prs = list(repo.get_pulls(state="open", head=f"{repo.owner.login}:{head_branch}"))
+        if open_prs:
+            pr = open_prs[0]
+            pr.edit(title=title, body=body)
+            return {
+                "pr_url": pr.html_url,
+                "pr_number": pr.number,
+                "title": pr.title,
+                "created": False,
+            }
+
+        pr = repo.create_pull(
+            title=title,
+            body=body,
+            head=head_branch,
+            base=base_branch,
+        )
+
+        return {
+            "pr_url": pr.html_url,
+            "pr_number": pr.number,
+            "title": pr.title,
+            "created": True,
+        }
+

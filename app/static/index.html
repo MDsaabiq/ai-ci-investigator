@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI CI/CD Failure Investigator</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-badge">CI/CD AGENT</span>
+                <h1>AI Failure Investigator</h1>
+            </div>
+            <p class="subtitle">Autonomous GitHub Actions failure diagnosis, Azure RAG knowledge, and automated remediation</p>
+        </header>
+
+        <!-- Input Form Card -->
+        <section class="card input-card">
+            <h2>Start Investigation</h2>
+            <form id="investigate-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="repository">GitHub Repository</label>
+                        <input type="text" id="repository" placeholder="owner/repo (e.g. MDsaabiq/testci-cdlab)" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="run_id">Workflow Run ID</label>
+                        <input type="number" id="run_id" placeholder="e.g. 35187606123" required>
+                    </div>
+                </div>
+                <button type="submit" id="submit-btn" class="btn btn-primary">
+                    <span id="btn-text">Investigate Failure</span>
+                    <span id="btn-spinner" class="spinner hidden"></span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Progress Tracker & Live Step Timeline -->
+        <section id="progress-card" class="card hidden">
+            <div class="status-bar">
+                <span id="status-badge" class="badge">Starting...</span>
+                <span id="status-detail" class="status-text">Connecting to GitHub Actions...</span>
+            </div>
+
+            <!-- Visual Step Timeline -->
+            <div id="steps-timeline" class="steps-timeline">
+                <div class="timeline-step" id="step-collect_evidence">
+                    <span class="step-dot"></span>
+                    <span class="step-label">1. Collect Logs</span>
+                </div>
+                <div class="timeline-step" id="step-investigate">
+                    <span class="step-dot"></span>
+                    <span class="step-label">2. Multi-turn Agent</span>
+                </div>
+                <div class="timeline-step" id="step-final_rca">
+                    <span class="step-dot"></span>
+                    <span class="step-label">3. Root Cause</span>
+                </div>
+                <div class="timeline-step" id="step-retrieve_rag">
+                    <span class="step-dot"></span>
+                    <span class="step-label">4. Azure RAG</span>
+                </div>
+                <div class="timeline-step" id="step-generate_fix">
+                    <span class="step-dot"></span>
+                    <span class="step-label">5. Code Fix</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- RCA Section -->
+        <section id="rca-card" class="card hidden">
+            <div class="card-header">
+                <h2>🔍 Root Cause Analysis</h2>
+            </div>
+            <div class="rca-content">
+                <div class="rca-item">
+                    <h3>Hypothesis</h3>
+                    <p id="rca-hypothesis" class="hypothesis-text"></p>
+                </div>
+                <div class="rca-item">
+                    <h3>Supporting Evidence</h3>
+                    <ul id="rca-evidence" class="evidence-list"></ul>
+                </div>
+                <div class="rca-item">
+                    <h3>Inspected Files</h3>
+                    <div id="rca-files" class="tags-container"></div>
+                </div>
+                <div id="rag-container" class="rca-item hidden">
+                    <h3>📚 Matched Historical Knowledge (Azure AI Search)</h3>
+                    <pre id="rag-content" class="code-block" style="white-space: pre-wrap; font-size: 0.85rem; color: #a5b4fc; background: #1e1b4b; border-color: #4338ca;"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Proposed Fix & Approval Section -->
+        <section id="fix-card" class="card hidden">
+            <div class="card-header">
+                <h2>🛠️ Proposed Fix</h2>
+            </div>
+            <p id="fix-explanation" class="fix-explanation-text"></p>
+            
+            <div id="changes-container" class="changes-list"></div>
+
+            <!-- Human Approval Actions -->
+            <div id="approval-actions" class="approval-box">
+                <h3>👤 Human Approval Required</h3>
+                <p>Review the patch above. Approve to create a fix branch and open a GitHub Pull Request.</p>
+                <div class="button-group">
+                    <button id="approve-btn" class="btn btn-success">✅ Approve & Open PR</button>
+                    <button id="reject-btn" class="btn btn-danger">❌ Reject Fix</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PR Result Card -->
+        <section id="result-card" class="card result-card hidden">
+            <h2>🎉 Pull Request Created</h2>
+            <p>The remediation patch has been committed to GitHub.</p>
+            <div class="pr-box">
+                <span id="result-branch" class="branch-tag"></span>
+                <a id="result-pr-link" href="#" target="_blank" class="btn btn-pr">View Pull Request ➔</a>
+            </div>
+        </section>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
