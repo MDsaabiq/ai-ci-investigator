@@ -56,9 +56,6 @@ https://github.com/user-attachments/assets/a24224ce-6165-48ed-bd9c-b284289f36e4
 > 5. **Human-in-the-Loop Gate**: Checkpoints execution state and renders a side-by-side diff for engineer verification.
 > 6. **Automated GitHub PR**: Commits atomic file blobs to a dedicated fix branch and opens a documented Pull Request.
 
-<details>
-<summary><b>📊 Click to expand Interactive State Flowchart (Mermaid)</b></summary>
-
 ```mermaid
 flowchart TD
     subgraph Ingestion [1. Ingestion & Log Triage]
@@ -97,8 +94,6 @@ flowchart TD
     style KnowledgeRetrieval fill:#022c22,stroke:#10b981,stroke-width:2px;
     style Remediation fill:#1e1b4b,stroke:#6366f1,stroke-width:2px;
 ```
-
-</details>
 
 ---
 
