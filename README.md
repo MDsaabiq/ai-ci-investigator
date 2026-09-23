@@ -36,7 +36,7 @@ I engineered this **Autonomous AI CI/CD Investigator** to bridge that gap. It ac
 <a id="live-demo"></a>
 ## 🎬 Live Demo
 
-https://github.com/MDsaabiq/ai-ci-investigator/raw/main/demo/AI%20Failure%20Investigator%20is%20an%20autonomous%20CICD%20agent.%20It%20detects%20failed%20GitHub%20Actions%2C%20retrieves%20past%20incident%20knowledge%20via%20Azure%20RAG%2C%20and%20automatically%20generates%20verified%20fix%20PRs.mp4
+https://github.com/user-attachments/assets/2bd5f5ce-5aad-4e4d-9c7b-0636c40d54ab
 
 > 💡 *Watch the end-to-end flow: from GitHub Actions failure log ingestion and autonomous repository investigation, through Azure AI Search RAG matching, to the Human-in-the-Loop review and automatic PR creation.*
 
