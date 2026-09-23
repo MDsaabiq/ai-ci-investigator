@@ -36,7 +36,7 @@ I engineered this **Autonomous AI CI/CD Investigator** to bridge that gap. It ac
 <a id="live-demo"></a>
 ## 🎬 Live Demo
 
-https://github.com/user-attachments/assets/20ce347f-49ea-4887-975b-b9e80c391831
+https://github.com/user-attachments/assets/4dcfc312-650f-4cea-bd3c-912f68c65c6e
 
 > 💡 *Watch the end-to-end flow: from GitHub Actions failure log ingestion and autonomous repository investigation, through Azure AI Search RAG matching, to the Human-in-the-Loop review and automatic PR creation.*
 
