@@ -6,7 +6,10 @@ def retrieve_relevant_incidents(query: str, top_k: int = 2) -> list[str]:
     if not query:
         return []
     store = get_vector_store()
-    docs = store.similarity_search(query, k=top_k)
+    if hasattr(store, "hybrid_search"):
+        docs = store.hybrid_search(query, k=top_k)
+    else:
+        docs = store.similarity_search(query, k=top_k)
     return [doc.page_content for doc in docs]
 
 
