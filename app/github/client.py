@@ -11,17 +11,26 @@ class GitHubClient:
     def __init__(self, token: str | None = None):
         self.token = token.strip() if token else None
         if self.token:
-            self.github = Github(self.token)
+            self.github = Github(self.token, retry=0)
         else:
-            self.github = Github()
+            self.github = Github(retry=0)
 
     def get_repository(self, repository: str) -> Repository:
         try:
             return self.github.get_repo(repository)
         except Exception as e:
-            if ("Bad credentials" in str(e) or "401" in str(e)) and self.token:
-                # Token expired/invalid: fallback to unauthenticated for reading public repos
-                return Github().get_repo(repository)
+            err_msg = str(e)
+            if "rate limit" in err_msg.lower() or "403" in err_msg:
+                raise RuntimeError(
+                    f"GitHub API rate limit exceeded (403). Please set a valid GITHUB_TOKEN in your environment: {e}"
+                )
+            if ("bad credentials" in err_msg.lower() or "401" in err_msg) and self.token:
+                try:
+                    return Github(retry=0).get_repo(repository)
+                except Exception:
+                    raise RuntimeError(
+                        "GITHUB_TOKEN is expired or invalid (401 Bad credentials), and unauthenticated access was rate limited (403). Please update GITHUB_TOKEN in your environment variables."
+                    )
             raise
 
     def get_workflow_run(
