@@ -70,6 +70,9 @@ def investigate(req: InvestigationRequest):
             # Stream LangGraph node updates
             for chunk in investigation_graph.stream(initial_input, config=config, stream_mode="updates"):
                 for node_name, node_output in chunk.items():
+                    if node_name == "__interrupt__" or not isinstance(node_output, dict):
+                        continue
+
                     final_state.update(node_output)
 
                     detail = ""
@@ -97,7 +100,7 @@ def investigate(req: InvestigationRequest):
                             detail = "Queried Azure AI Search for matching historical remediations."
                         else:
                             status = "ChromaDB (RAG)"
-                            detail = "Queried ChromaDB for matching historical remediations (Azure AI Search deprovisioned for cost saving)."
+                            detail = "Queried ChromaDB for matching historical remediations (Azure AI Search & embedding models deprovisioned)."
                     elif node_name == "generate_fix":
                         status = "Patch Generated"
                         detail = "Synthesized minimal, surgical patch to resolve the failure."
@@ -113,23 +116,24 @@ def investigate(req: InvestigationRequest):
                     if "rag_context" in node_output:
                         payload["rag_context"] = node_output["rag_context"]
                     if "proposed_fix" in node_output and node_output["proposed_fix"]:
-                        payload["proposed_fix"] = node_output["proposed_fix"].model_dump()
+                        fix_obj = node_output["proposed_fix"]
+                        payload["proposed_fix"] = fix_obj.model_dump() if hasattr(fix_obj, "model_dump") else fix_obj
 
                     yield json.dumps(payload) + "\n"
 
             # Final complete event
+            current_state = (investigation_graph.get_state(config).values or {})
+            raw_fix = current_state.get("proposed_fix") or final_state.get("proposed_fix")
+            serialized_fix = raw_fix.model_dump() if hasattr(raw_fix, "model_dump") else raw_fix
+
             complete_payload = {
                 "step": "complete",
                 "status": "Awaiting Approval",
                 "detail": "Investigation complete. Review the diagnosed RCA and proposed fix below.",
                 "thread_id": thread_id,
-                "rca": final_state.get("final_rca"),
-                "rag_context": final_state.get("rag_context"),
-                "proposed_fix": (
-                    final_state.get("proposed_fix").model_dump()
-                    if final_state.get("proposed_fix")
-                    else None
-                ),
+                "rca": current_state.get("final_rca") or final_state.get("final_rca"),
+                "rag_context": current_state.get("rag_context") or final_state.get("rag_context"),
+                "proposed_fix": serialized_fix,
             }
             yield json.dumps(complete_payload) + "\n"
 
