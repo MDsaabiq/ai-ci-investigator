@@ -26,6 +26,119 @@ const resultCard = document.getElementById("result-card");
 const resultBranch = document.getElementById("result-branch");
 const resultPrLink = document.getElementById("result-pr-link");
 
+// Ingestion Buttons & Toast
+const ingestToast = document.getElementById("ingest-toast");
+const costSavingBanner = document.getElementById("cost-saving-banner");
+const azureActiveBar = document.getElementById("azure-active-bar");
+
+async function checkRagStatus() {
+    const stepRetrieveRagLabel = document.querySelector("#step-retrieve_rag .step-label");
+    const ragContainerHeader = document.querySelector("#rag-container h3");
+
+    try {
+        const res = await fetch("/api/rag/status");
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.azure_working) {
+            // Azure is fully operational: HIDE cost-saving notice
+            if (costSavingBanner) costSavingBanner.classList.add("hidden");
+            if (azureActiveBar) azureActiveBar.classList.remove("hidden");
+            if (stepRetrieveRagLabel) stepRetrieveRagLabel.textContent = "4. Azure RAG";
+            if (ragContainerHeader) ragContainerHeader.textContent = "📚 Matched Historical Knowledge (Azure AI Search)";
+        } else {
+            // Azure is deprovisioned or failing: SHOW cost-saving notice
+            if (costSavingBanner) costSavingBanner.classList.remove("hidden");
+            if (azureActiveBar) azureActiveBar.classList.add("hidden");
+            if (stepRetrieveRagLabel) stepRetrieveRagLabel.textContent = "4. ChromaDB RAG";
+            if (ragContainerHeader) ragContainerHeader.textContent = "📚 Matched Historical Knowledge (ChromaDB Fallback)";
+        }
+    } catch (e) {
+        // On error, show fallback banner
+        if (costSavingBanner) costSavingBanner.classList.remove("hidden");
+    }
+}
+
+// Check status on page load
+checkRagStatus();
+
+async function handleIngest(btn, textEl, spinnerEl) {
+    if (!btn) return;
+    const originalText = textEl ? textEl.textContent : "⚡ Ingest Knowledge Base";
+    btn.disabled = true;
+    if (textEl) textEl.textContent = "Ingesting...";
+    if (spinnerEl) spinnerEl.classList.remove("hidden");
+    if (ingestToast) ingestToast.classList.add("hidden");
+
+    try {
+        const res = await fetch("/api/ingest", { method: "POST" });
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.detail || "Failed to ingest knowledge base");
+        }
+
+        if (ingestToast) {
+            ingestToast.className = "toast toast-success";
+            ingestToast.innerHTML = `✅ <strong>Knowledge Base Ready:</strong> Ingested <strong>${data.incidents_count || 0} incidents</strong> (${data.chunks_count || 0} chunks) into <strong>${data.provider || "Vector DB"}</strong>.`;
+            ingestToast.classList.remove("hidden");
+
+            setTimeout(() => {
+                ingestToast.classList.add("hidden");
+            }, 6000);
+        }
+
+        // Re-check RAG status to refresh banner/labels
+        await checkRagStatus();
+    } catch (err) {
+        if (ingestToast) {
+            ingestToast.className = "toast toast-error";
+            ingestToast.innerHTML = `❌ <strong>Ingestion Failed:</strong> ${err.message}`;
+            ingestToast.classList.remove("hidden");
+        }
+    } finally {
+        btn.disabled = false;
+        if (textEl) textEl.textContent = originalText;
+        if (spinnerEl) spinnerEl.classList.add("hidden");
+    }
+}
+
+const ingestBtn = document.getElementById("ingest-btn");
+if (ingestBtn) {
+    const ingestBtnText = document.getElementById("ingest-btn-text");
+    const ingestBtnSpinner = document.getElementById("ingest-btn-spinner");
+    ingestBtn.addEventListener("click", () => handleIngest(ingestBtn, ingestBtnText, ingestBtnSpinner));
+}
+
+const ingestBtnAzure = document.getElementById("ingest-btn-azure");
+if (ingestBtnAzure) {
+    const ingestBtnAzureText = document.getElementById("ingest-btn-azure-text");
+    const ingestBtnAzureSpinner = document.getElementById("ingest-btn-azure-spinner");
+    ingestBtnAzure.addEventListener("click", () => handleIngest(ingestBtnAzure, ingestBtnAzureText, ingestBtnAzureSpinner));
+}
+
+// 1-Click Recruiter Demo Auto-Fill
+const autoFillBtn = document.getElementById("auto-fill-btn");
+if (autoFillBtn) {
+    autoFillBtn.addEventListener("click", () => {
+        const repoInput = document.getElementById("repository");
+        const runIdInput = document.getElementById("run_id");
+        if (repoInput) repoInput.value = "MDsaabiq/testci-cdlab";
+        if (runIdInput) runIdInput.value = "40283342407";
+
+        [repoInput, runIdInput].forEach(el => {
+            if (el) {
+                el.style.borderColor = "#10b981";
+                el.style.boxShadow = "0 0 10px rgba(16, 185, 129, 0.4)";
+                setTimeout(() => {
+                    el.style.borderColor = "";
+                    el.style.boxShadow = "";
+                }, 1500);
+            }
+        });
+    });
+}
+
 // Steps in order
 const STEPS = [
     "step-collect_evidence",

@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 from app.models.request import InvestigationRequest, ApprovalRequest
 from app.graph.graph import investigation_graph
+from app.rag.store import ingest_documents, check_azure_status
 
 load_dotenv()
 
@@ -23,6 +24,22 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 @app.get("/")
 def get_index():
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/api/rag/status")
+def get_rag_status():
+    """Returns status of Azure AI Search vs ChromaDB fallback."""
+    return check_azure_status()
+
+
+@app.post("/api/ingest")
+def trigger_ingest():
+    """Triggers knowledge base ingestion into vector DB (Azure AI Search or ChromaDB fallback)."""
+    try:
+        result = ingest_documents()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/investigate")
@@ -74,8 +91,13 @@ def investigate(req: InvestigationRequest):
                         status = "Root Cause Diagnosed"
                         detail = "Finalized Root Cause Analysis (RCA)."
                     elif node_name == "retrieve_rag":
-                        status = "Azure AI Search (RAG)"
-                        detail = "Queried Azure AI Search for matching historical remediations."
+                        status_info = check_azure_status()
+                        if status_info.get("azure_working"):
+                            status = "Azure AI Search (RAG)"
+                            detail = "Queried Azure AI Search for matching historical remediations."
+                        else:
+                            status = "ChromaDB (RAG)"
+                            detail = "Queried ChromaDB for matching historical remediations (Azure AI Search deprovisioned for cost saving)."
                     elif node_name == "generate_fix":
                         status = "Patch Generated"
                         detail = "Synthesized minimal, surgical patch to resolve the failure."

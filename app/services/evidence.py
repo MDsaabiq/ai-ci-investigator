@@ -65,9 +65,15 @@ class EvidenceCollector:
                 relevant_sections.append(f"--- {filename} ---\n" + "\n".join(tail_lines))
 
         if not relevant_sections:
-            for filename, content in list(logs.items())[:3]:
-                lines = content.strip().splitlines()
-                relevant_sections.append(f"--- {filename} ---\n" + "\n".join(lines[-30:]))
+            if logs:
+                for filename, content in list(logs.items())[:3]:
+                    lines = content.strip().splitlines()
+                    relevant_sections.append(f"--- {filename} ---\n" + "\n".join(lines[-30:]))
+            else:
+                relevant_sections.append(
+                    f"CI Step '{failed_step}' in job '{failed_job}' exited with failure.\n"
+                    f"Recent commit diff indicates modifications to project dependencies/files. Please inspect changed files to diagnose root cause."
+                )
 
         combined_logs = "\n\n".join(relevant_sections)
         if len(combined_logs) > 4000:

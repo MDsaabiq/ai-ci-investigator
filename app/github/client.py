@@ -8,12 +8,21 @@ from github.WorkflowRun import WorkflowRun
 
 
 class GitHubClient:
-    def __init__(self, token: str):
-        self.github = Github(token)
-        self.token = token
+    def __init__(self, token: str | None = None):
+        self.token = token.strip() if token else None
+        if self.token:
+            self.github = Github(self.token)
+        else:
+            self.github = Github()
 
     def get_repository(self, repository: str) -> Repository:
-        return self.github.get_repo(repository)
+        try:
+            return self.github.get_repo(repository)
+        except Exception as e:
+            if ("Bad credentials" in str(e) or "401" in str(e)) and self.token:
+                # Token expired/invalid: fallback to unauthenticated for reading public repos
+                return Github().get_repo(repository)
+            raise
 
     def get_workflow_run(
         self,
@@ -77,41 +86,51 @@ class GitHubClient:
         url = f"https://api.github.com/repos/{repository}/actions/runs/{run_id}/logs"
 
         headers = {
-            "Authorization": f"Bearer {self.token}",
             "Accept": "application/vnd.github+json",
         }
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
 
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+        except Exception:
+            return {}
 
         logs = {}
-
-        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
-            for filename in archive.namelist():
-                with archive.open(filename) as file:
-                    logs[filename] = file.read().decode(
-                        "utf-8",
-                        errors="replace",
-                    )
+        try:
+            with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+                for filename in archive.namelist():
+                    with archive.open(filename) as file:
+                        logs[filename] = file.read().decode(
+                            "utf-8",
+                            errors="replace",
+                        )
+        except Exception:
+            return {}
 
         return logs
+
     def search_repository(
         self,
         repository: str,
         query: str,
     ) -> list[dict]:
-        results = self.github.search_code(
-            f"{query} repo:{repository}"
-        )
+        try:
+            results = self.github.search_code(
+                f"{query} repo:{repository}"
+            )
 
-        return [
-            {
-                "path": result.path,
-                "name": result.name,
-                "url": result.html_url,
-            }
-            for result in results
-        ]
+            return [
+                {
+                    "path": result.path,
+                    "name": result.name,
+                    "url": result.html_url,
+                }
+                for result in results
+            ]
+        except Exception:
+            return []
 
     def create_branch(
         self,

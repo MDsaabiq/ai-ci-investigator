@@ -13,3 +13,4 @@ langchain-text-splitters
 langchain-openai
 azure-search-documents
 azure-identity
+langchain-chroma

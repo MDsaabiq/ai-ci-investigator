@@ -4,3 +4,4 @@ test*
 __pycache__/
 *.py[cod]
 .venv/
+data/chroma_db/

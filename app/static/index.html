@@ -20,9 +20,41 @@
             <p class="subtitle">Autonomous GitHub Actions failure diagnosis, Azure RAG knowledge, and automated remediation</p>
         </header>
 
+        <!-- Cost Saving Deprovision Notice Banner (visible ONLY if Azure AI Search & Embeddings are not working) -->
+        <div id="cost-saving-banner" class="cost-saving-banner hidden">
+            <div class="banner-left">
+                <span class="banner-badge">COST SAVING</span>
+                <span>Azure AI Search is deprovisioned for cost saving. Using fallback <strong>ChromaDB</strong>.</span>
+            </div>
+            <button type="button" id="ingest-btn" class="btn-ingest" title="Ingest historical incidents into ChromaDB">
+                <span id="ingest-btn-text">⚡ Ingest Knowledge Base</span>
+                <span id="ingest-btn-spinner" class="spinner hidden"></span>
+            </button>
+        </div>
+
+        <!-- Azure Active Bar (visible if Azure AI Search & Embeddings ARE working) -->
+        <div id="azure-active-bar" class="azure-active-bar hidden">
+            <span class="azure-status-badge">⚡ Azure AI Search Active</span>
+            <button type="button" id="ingest-btn-azure" class="btn-ingest" title="Ingest historical incidents into Azure AI Search">
+                <span id="ingest-btn-azure-text">⚡ Ingest Knowledge Base</span>
+                <span id="ingest-btn-azure-spinner" class="spinner hidden"></span>
+            </button>
+        </div>
+
+        <div id="ingest-toast" class="toast hidden"></div>
+
         <!-- Input Form Card -->
         <section class="card input-card">
-            <h2>Start Investigation</h2>
+            <div class="card-header-row">
+                <h2>Start Investigation</h2>
+                <div class="recruiter-pill">
+                    <span class="badge-recruiter">Recruiter Guide</span>
+                    <a href="https://github.com/MDsaabiq/testci-cdlab" target="_blank" class="demo-link" title="Open repository">📂 MDsaabiq/testci-cdlab ↗</a>
+                    <a href="https://github.com/MDsaabiq/testci-cdlab/actions/runs/40283342407" target="_blank" class="demo-link demo-link-ci" title="View failing Actions run">🔴 Run #40283342407 ↗</a>
+                    <button type="button" id="auto-fill-btn" class="btn-quick-fill" title="1-click fill inputs for this demo test case">⚡ 1-Click Load</button>
+                </div>
+            </div>
+
             <form id="investigate-form">
                 <div class="form-row">
                     <div class="form-group">
@@ -31,7 +63,7 @@
                     </div>
                     <div class="form-group">
                         <label for="run_id">Workflow Run ID</label>
-                        <input type="number" id="run_id" placeholder="e.g. 35187606123" required>
+                        <input type="number" id="run_id" placeholder="e.g. 40283342407" required>
                     </div>
                 </div>
                 <button type="submit" id="submit-btn" class="btn btn-primary">
@@ -39,6 +71,10 @@
                     <span id="btn-spinner" class="spinner hidden"></span>
                 </button>
             </form>
+
+            <div class="demo-guide-hint">
+                💡 <strong>Recruiter Test Case:</strong> Use repo <a href="https://github.com/MDsaabiq/testci-cdlab" target="_blank">MDsaabiq/testci-cdlab</a> with CI run <a href="https://github.com/MDsaabiq/testci-cdlab/actions/runs/40283342407" target="_blank">40283342407</a>. <code>pytest</code> was intentionally removed from <code>app/requirements.txt</code> to test the agent's autonomous root-cause analysis and automated remediation.
+            </div>
         </section>
 
         <!-- Progress Tracker & Live Step Timeline -->
@@ -64,7 +100,7 @@
                 </div>
                 <div class="timeline-step" id="step-retrieve_rag">
                     <span class="step-dot"></span>
-                    <span class="step-label">4. Azure RAG</span>
+                    <span class="step-label">4. ChromaDB RAG</span>
                 </div>
                 <div class="timeline-step" id="step-generate_fix">
                     <span class="step-dot"></span>
@@ -92,7 +128,7 @@
                     <div id="rca-files" class="tags-container"></div>
                 </div>
                 <div id="rag-container" class="rca-item hidden">
-                    <h3>📚 Matched Historical Knowledge (Azure AI Search)</h3>
+                    <h3>📚 Matched Historical Knowledge (ChromaDB Fallback)</h3>
                     <pre id="rag-content" class="code-block" style="white-space: pre-wrap; font-size: 0.85rem; color: #a5b4fc; background: #1e1b4b; border-color: #4338ca;"></pre>
                 </div>
             </div>
